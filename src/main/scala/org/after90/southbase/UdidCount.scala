@@ -5,8 +5,6 @@ package org.after90.southbase
   * spark-submit --master yarn-cluster --class org.after90.spark.WordCount sbtprojecttest_2.10-0.1.0.jar
   */
 
-import java.io.File
-
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
