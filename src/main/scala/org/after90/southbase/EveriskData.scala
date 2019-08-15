@@ -10,7 +10,9 @@ import org.apache.spark.sql.SparkSession
 
 object EveriskData {
 
-  case class ELog(udid: String, time: String)
+  case class StartLog(udid: String, time: String)
+
+  case class DevinfoLog(udid: String, imei: String)
 
   def main(args: Array[String]): Unit = {
     val conf = new SparkConf().setAppName("EveriskData").setMaster("local[*]")
@@ -21,22 +23,26 @@ object EveriskData {
 
     import spark.implicits._
 
-    val eFile = spark.sparkContext.textFile("/Users/zhaogj/bangcle/southbase/20190809/everisk/v3.x_start/")
-    val eDF = eFile
+    //启动数据
+    val startFile = spark.sparkContext.textFile("/Users/zhaogj/bangcle/southbase/20190809/everisk/v3.x_start/")
+    val startDF = startFile
       .map(_.split(","))
       .filter(_.size == 2)
-      .map(x => ELog(x(0).trim, x(1).trim))
+      .map(x => StartLog(x(0).trim, x(1).trim))
       .toDF()
-    eDF.createOrReplaceTempView("e_log")
+    startDF.createOrReplaceTempView("start_log")
 
-    //数据条数
-    var sqlDF = spark.sql("SELECT count(*) FROM e_log")
-    //    sqlDF.show()
-    //1565897
-    //设备个数
-    sqlDF = spark.sql("SELECT count(distinct udid) FROM e_log")
+    //设备数据
+    val devinfoFile = spark.sparkContext.textFile("/Users/zhaogj/bangcle/southbase/20190809/everisk/v3.x_devinfo/")
+    val devinfoDF = devinfoFile
+      .map(_.split("\t"))
+      //.filter(_.size == 2)
+      .map(x => DevinfoLog(x(4).trim, x(18).trim))
+      .toDF()
+    devinfoDF.createOrReplaceTempView("devinfo_log")
+
+    var sqlDF = spark.sql("SELECT * FROM devinfo_log")
     sqlDF.show()
-    //699900
 
     spark.stop()
   }
