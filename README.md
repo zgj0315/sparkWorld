@@ -2,8 +2,8 @@
 
 ## 版本信息
 ```
-scalaVersion : 2.11.12
-sparkVersion : 2.2.1
+scalaVersion : 2.10.5
+sparkVersion : 1.6.0
 ```
 
 ## 编译命令
