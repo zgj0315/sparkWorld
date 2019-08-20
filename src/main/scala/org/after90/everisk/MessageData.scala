@@ -15,8 +15,9 @@ object MessageData {
 
   def main(args: Array[String]): Unit = {
     var master = "local[*]"
-    var messagePath = "/Users/zhaogj/bangcle/everisk/src/message_data_20190805_1564969723942_1565231757484"
-    var outputPath = "/Users/zhaogj/tmp/output"
+    //    var messagePath = "/Users/zhaogj/bangcle/everisk/src/message_data_20190805_1564969723942_1565231757484"
+    var messagePath = "/Users/zhaogj/bangcle/southbase/20190809/everisk/v4.3/2019_0819_start.txt"
+    var outputPath = "/Users/zhaogj/bangcle/southbase/20190809/everisk/v4.3/output"
 
     if (args.length == 3) {
       master = args(0)
@@ -44,7 +45,7 @@ object MessageData {
         body
       })
       .filter(_.containsKey("udid"))
-      .filter(_.containsKey("imei"))
+      //      .filter(_.containsKey("imei"))
       //      .filter(_.containsKey("server_time"))
       //      .filter(_.getLong("server_time") >= 1564969724122L)
       //      .filter(_.getLong("server_time") < 1564999724122L)
