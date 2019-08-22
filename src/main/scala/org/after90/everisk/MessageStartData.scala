@@ -86,7 +86,7 @@ object MessageStartData {
     val jfDF = jfFile
       .map(_.split("\t"))
       .filter(_.size == 6)
-      .map(x => JFLog(x(0).trim, x(1).trim, x(2).trim, x(3).trim, x(4).trim, x(5).trim))
+      .map(x => Udid(x(0).trim))
       .toDF()
     jfDF.createOrReplaceTempView("jf_log")
     val sqlDF = spark.sql("SELECT distinct udid FROM jf_log")
@@ -105,6 +105,8 @@ object MessageStartData {
     import spark.implicits._
 
     val eV4File = spark.sparkContext.textFile("/Volumes/HDD01/bangcle/v4.3/udid/part*")
+    //    val eV4File = spark.sparkContext.textFile("/Volumes/HDD01/bangcle/aliyun/udid")
+
 
     val eV4DF = eV4File
       .map(x => {
@@ -134,6 +136,8 @@ object MessageStartData {
     sqlDF = spark.sql("SELECT count(distinct udid) FROM ev4_log")
     //    sqlDF.show()
     //    1847206
+    //    aliyun
+    //    2396323
 
     //计费数据设备个数
     sqlDF = spark.sql("SELECT count(distinct udid) FROM jf_log")
@@ -149,6 +153,8 @@ object MessageStartData {
     sqlDF = spark.sql("SELECT count(distinct udid) FROM (select * from ev3_log union select * from ev4_log) as e_log")
     //    sqlDF.show()
     //    2540042
+    //    aliyun
+    //    3095706
 
     //v3交集
     sqlDF = spark.sql("SELECT count(distinct b.udid) FROM ev3_log as a, jf_log as b where a.udid = b.udid")
@@ -157,13 +163,14 @@ object MessageStartData {
 
     //v4交集
     sqlDF = spark.sql("SELECT count(distinct b.udid) FROM ev4_log as a, jf_log as b where a.udid = b.udid")
-    //    sqlDF.show()
+    sqlDF.show()
     //    8367
 
     //v3+v4交集的设备个数
     sqlDF = spark.sql("SELECT count(distinct b.udid) FROM (select * from ev3_log union select * from ev4_log) as a, jf_log as b where a.udid = b.udid")
-    sqlDF.show()
+    //    sqlDF.show()
     //    13771 1.2%
+
     spark.stop()
   }
 }
