@@ -16,6 +16,10 @@ object Bangcle {
     //    Imsi.getImsiV3()
     //    Imsi.getImsiV4()
     //    Imsi.imsiStat()
+    //    UdidImei.jf()
+    //    UdidImei.v3()
+    //    UdidImei.v4()
+    UdidImei.stat()
   }
 
 }
