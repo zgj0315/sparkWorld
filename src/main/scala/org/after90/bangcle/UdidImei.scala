@@ -144,6 +144,96 @@ object UdidImei {
     sqlDF = spark.sql("select length(imei) from udid_imei_v4")
     //    sqlDF.groupBy("length(imei)").count().show()
 
+    //数据分析
+    sqlDF = spark.sql("select * from udid_imei_jf")
+    //    sqlDF.groupBy("udid").count().sort($"count".desc).show()
+    sqlDF = spark.sql("select * from udid_imei_jf")
+    //    sqlDF.groupBy("imei").count().sort($"count".desc).show()
+    //    sqlDF.groupBy("imei").count().sort($"count".desc).repartition(1)
+    //      .write.format("csv").save("/Volumes/HDD01/bangcle/jifei/imei_udid")
+
+    //    计费数据
+    //一个imei上，存在几百个udid的较多
+    sqlDF = spark.sql("select imei, count(imei) from udid_imei_jf group by imei having count(imei) > 1")
+    //    sqlDF.show()
+    sqlDF = spark.sql("select count(imei) from (select imei, count(imei) from udid_imei_jf group by imei) as a")
+    //    sqlDF.show()
+    //    imei个数
+    //    164799
+
+    sqlDF = spark.sql("select count(imei) from (select imei, count(imei) from udid_imei_jf group by imei having count(imei) > 1) as a")
+    //    sqlDF.show()
+    //    imei对应单一设备
+    //    105657 64.1%
+
+    //    v3数据
+    //一个imei上，存在几百个udid的较多
+    sqlDF = spark.sql("select imei, count(imei) from udid_imei_v3 group by imei having count(imei) > 1")
+    //    sqlDF.show()
+
+    sqlDF = spark.sql("select count(imei) from (select imei, count(imei) from udid_imei_v3 group by imei) as a")
+    //    sqlDF.show()
+    //    imei个数
+    //    795023
+
+    sqlDF = spark.sql("select count(imei) from (select imei, count(imei) from udid_imei_v3 group by imei having count(imei) > 1) as a")
+    //    sqlDF.show()
+    //    imei对应单一设备
+    //    5578 0.7%
+
+    //    v4数据
+    //一个imei上，存在几百个udid的较多
+    sqlDF = spark.sql("select imei, count(imei) from udid_imei_v4 group by imei having count(imei) > 1")
+    //    sqlDF.show()
+
+    sqlDF = spark.sql("select count(imei) from (select imei, count(imei) from udid_imei_v4 group by imei) as a")
+    //    sqlDF.show()
+    //    imei个数
+    //    3623765
+
+    sqlDF = spark.sql("select count(imei) from (select imei, count(imei) from udid_imei_v4 group by imei having count(imei) > 1) as a")
+    //    sqlDF.show()
+    //    imei对应单一设备
+    //    790 0.02%
+
+    //分析udid和imei对应关系
+
+    //    计费数据
+    sqlDF = spark.sql("select count(udid) from (select udid, count(udid) from udid_imei_jf group by udid) as a")
+    //    sqlDF.show()
+    //    udid个数
+    //    1141285
+
+    sqlDF = spark.sql("select count(udid) from (select udid, count(udid) from udid_imei_jf group by udid having count(udid) > 2) as a")
+    //    sqlDF.show()
+    //    udid对应两个imei
+    //    1
+
+    //    v3数据
+    sqlDF = spark.sql("select count(udid) from (select udid, count(udid) from udid_imei_v3 group by udid) as a")
+    //    sqlDF.show()
+    //    udid个数
+    //    806355
+
+    sqlDF = spark.sql("select count(udid) from (select udid, count(udid) from udid_imei_v3 group by udid having count(udid) > 2) as a")
+    //    sqlDF.show()
+    //    udid对应两个imei
+    //    22
+
+    //    v4数据
+    sqlDF = spark.sql("select count(udid) from (select udid, count(udid) from udid_imei_v4 group by udid) as a")
+    //    sqlDF.show()
+    //    udid个数
+    //    1839579
+
+    sqlDF = spark.sql("select count(udid) from (select udid, count(udid) from udid_imei_v4 group by udid having count(udid) > 2) as a")
+    //    sqlDF.show()
+    //    udid对应两个imei
+    //    158
+
+    sqlDF = spark.sql("select * from udid_imei_v4")
+    //    sqlDF.groupBy("udid").count().sort($"udid".desc).show()
+
     // 计费数据条数
     sqlDF = spark.sql("select count(*) from udid_imei_jf")
     //    sqlDF.show()
