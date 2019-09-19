@@ -8,7 +8,9 @@ object UdidImei {
 
   case class JFLog(date: String, time: String, imsi: String, imei: String, sdk_version: String, udid: String)
 
-  case class DevinfoLog(udid: String, imei: String)
+  case class Devinfo(udid: String, imei: String, os_version: String)
+
+  case class JF(udid: String, imei: String, sdk_version: String)
 
   /**
     * 3.0版本数据
@@ -21,12 +23,12 @@ object UdidImei {
     val devinfoFile = spark.sparkContext.textFile("/Volumes/HDD01/bangcle/v3.0/v3.0_devinfo/")
     val devinfoDF = devinfoFile
       .map(_.split("\t"))
-      .map(x => DevinfoLog(x(4).trim, x(18).trim))
+      .map(x => Devinfo(x(4).trim, x(18).trim, x(28).trim))
       .toDF()
     devinfoDF.createOrReplaceTempView("devinfo_log")
 
-    val sqlDF = spark.sql("SELECT distinct udid, imei FROM devinfo_log")
-    sqlDF.repartition(1).write.format("csv").save("/Volumes/HDD01/bangcle/v3.0/udid_imei")
+    val sqlDF = spark.sql("SELECT distinct udid, imei, os_version FROM devinfo_log")
+    sqlDF.repartition(1).write.format("csv").save("/Volumes/HDD01/bangcle/v3.0/output")
     spark.stop()
   }
 
@@ -46,21 +48,21 @@ object UdidImei {
       .map(_.getJSONObject("body"))
       .filter(_.containsKey("udid"))
       .filter(_.containsKey("imei"))
-      .map(x => DevinfoLog(x.getString("udid"), x.getString("imei")))
+      .map(x => Devinfo(x.getString("udid"), x.getString("imei"), x.getString("os_version")))
       .flatMap(x => {
         val imeis = x.imei.split(",")
-        val arr = new Array[DevinfoLog](imeis.size)
+        val arr = new Array[Devinfo](imeis.size)
         for (i <- 0 until imeis.size) {
-          arr(i) = DevinfoLog(x.udid, imeis(i).replaceAll("\"", "").replaceAll("\\[", "").replaceAll("\\]", ""))
+          arr(i) = Devinfo(x.udid, imeis(i).replaceAll("\"", "").replaceAll("\\[", "").replaceAll("\\]", ""), x.os_version)
         }
         arr
       })
       .toDF()
     devinfoDF.createOrReplaceTempView("imei_v4")
 
-    val sqlDF = spark.sql("SELECT distinct udid, imei FROM imei_v4")
+    val sqlDF = spark.sql("SELECT distinct udid, imei, os_version FROM imei_v4")
     //    sqlDF.show()
-    sqlDF.repartition(1).write.format("csv").save("/Volumes/HDD01/bangcle/v4.3/udid_imei")
+    sqlDF.repartition(1).write.format("csv").save("/Volumes/HDD01/bangcle/v4.3/output")
     spark.stop()
   }
 
@@ -79,8 +81,8 @@ object UdidImei {
       .map(x => JFLog(x(0).trim, x(1).trim, x(2).trim, x(3).trim, x(4).trim, x(5).trim))
       .toDF()
     jfDF.createOrReplaceTempView("jf_log")
-    val sqlDF = spark.sql("SELECT distinct udid, imei FROM jf_log")
-    sqlDF.repartition(1).write.format("csv").save("/Volumes/HDD01/bangcle/jifei/udid_imei")
+    val sqlDF = spark.sql("SELECT distinct udid, imei, sdk_version FROM jf_log")
+    sqlDF.repartition(1).write.format("csv").save("/Volumes/HDD01/bangcle/jifei/output")
     spark.stop()
   }
 
@@ -92,11 +94,11 @@ object UdidImei {
     val spark = SparkSession.builder().config(conf).getOrCreate()
     import spark.implicits._
 
-    val v3File = spark.sparkContext.textFile("/Volumes/HDD01/bangcle/v3.0/udid_imei/part*")
+    val v3File = spark.sparkContext.textFile("/Volumes/HDD01/bangcle/v3.0/output/part*")
     val v3DF = v3File
       .map(_.split(","))
-      .filter(_.size == 2)
-      .map(x => DevinfoLog(x(0), x(1)))
+      .filter(_.size == 3)
+      .map(x => Devinfo(x(0), x(1), x(2)))
       .filter(_.udid.length == 36) //数据清洗
       .filter(_.imei.length == 15) //数据清洗
       .toDF()
@@ -106,11 +108,11 @@ object UdidImei {
     //    sqlDF.show()
     //    888197
 
-    val v4File = spark.sparkContext.textFile("/Volumes/HDD01/bangcle/v4.3/udid_imei/part*")
+    val v4File = spark.sparkContext.textFile("/Volumes/HDD01/bangcle/v4.3/output/part*")
     val v4DF = v4File
       .map(_.split(","))
-      .filter(_.size == 2)
-      .map(x => DevinfoLog(x(0), x(1)))
+      .filter(_.size == 3)
+      .map(x => Devinfo(x(0), x(1), x(2)))
       .filter(_.imei.length == 15) //数据清洗
       .toDF()
     v4DF.createOrReplaceTempView("udid_imei_v4")
@@ -119,11 +121,11 @@ object UdidImei {
     //    sqlDF.show()
     //    3633839
 
-    val jfFile = spark.sparkContext.textFile("/Volumes/HDD01/bangcle/jifei/udid_imei/part*")
+    val jfFile = spark.sparkContext.textFile("/Volumes/HDD01/bangcle/jifei/output/part*")
     val jfDF = jfFile
       .map(_.split(","))
-      .filter(_.size == 2)
-      .map(x => DevinfoLog(x(0), x(1)))
+      .filter(_.size == 3)
+      .map(x => JF(x(0), x(1), x(2)))
       .filter(_.udid.length == 36) //数据清洗
       .filter(_.imei.length == 15) //数据清洗
       .toDF()
@@ -155,8 +157,6 @@ object UdidImei {
     //    计费数据
     //一个imei上，存在几百个udid的较多
     sqlDF = spark.sql("select imei, count(imei) from udid_imei_jf group by imei having count(imei) > 1")
-    //    sqlDF.show()
-    sqlDF = spark.sql("select count(imei) from (select imei, count(imei) from udid_imei_jf group by imei) as a")
     //    sqlDF.show()
     //    imei个数
     //    164799
@@ -325,6 +325,17 @@ object UdidImei {
     //    sqlDF.show()
     //    15379 9.13%
     //    15003
+
+
+    //imei对应多个设备，输出到文件
+    sqlDF = spark.sql("select imei, udid from udid_imei_jf order by imei")
+    //    sqlDF.repartition(1).write.format("csv").save("/Volumes/HDD01/bangcle/tmp/jf_imei_udid_sort")
+    sqlDF = spark.sql("select a.imei, a.udid from (select * from udid_imei_v3 union select * from udid_imei_v4) as a order by a.imei")
+    //    sqlDF.repartition(1).write.format("csv").save("/Volumes/HDD01/bangcle/tmp/v3_v4_imei_udid_sort")
+    sqlDF = spark.sql("select distinct a.imei from (select * from udid_imei_v3 union select * from udid_imei_v4) as a, udid_imei_jf as b where a.imei = b.imei")
+    //    sqlDF.repartition(1).write.format("csv").save("/Volumes/HDD01/bangcle/tmp/join_imei")
+
+    sqlDF = spark.sql("select ")
 
     spark.stop()
   }
