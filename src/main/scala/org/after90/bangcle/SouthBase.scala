@@ -54,8 +54,8 @@ object SouthBase {
     //    sqlDF.show()
     //    2092018
     // 鉴权手机号个数
-    val sqlDF = spark.sql("select count(distinct (mobile_no)) from jq")
-    sqlDF.show()
+    //    val sqlDF = spark.sql("select count(distinct (mobile_no)) from jq")
+    //    sqlDF.show()
     //    82210
 
     // 有启动数据的鉴权手机号个数
@@ -157,6 +157,100 @@ object SouthBase {
     //      "(select udid from dev_v3 union select udid from dev_v4) as b " +
     //      "where a.mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and a.udid = b.udid")
     //    sqlDF.show()
+
+    /**
+      * 20190920
+      */
+
+    //    val sqlDF = spark.sql("select * from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF'")
+    //    sqlDF.groupBy("imei").count().groupBy("count").count().sort($"count".desc).show(100)
+    //              .repartition(1).write.format("csv").save("/Users/zhaogj/tmp/output")
+    //        sqlDF.show()
+    // v3 udid个数
+    //    val sqlDF = spark.sql("select count(distinct udid) from (select udid from dev_v3 union select udid from start_v3)")
+    // v4 udid个数
+    //    val sqlDF = spark.sql("select count(distinct udid) from (select udid from dev_v4 union select udid from start_v4)")
+    // 订购数据条数
+    //    val sqlDF = spark.sql("select count(*) from dg as a, (select udid from dev_v3 union select udid from start_v3) as b where a.mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and a.udid = b.udid")
+    //    1054
+    //    val sqlDF = spark.sql("select count(*) from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and udid in (select udid from dev_v3 union select udid from start_v3)")
+    //    1054
+
+    // 订购udid个数
+    //    val sqlDF = spark.sql("select count(distinct a.udid) from dg as a, (select udid from dev_v3 union select udid from start_v3) as b where a.mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and a.udid = b.udid")
+    //    707
+    //    val sqlDF = spark.sql("select count(distinct udid) from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and udid in (select udid from dev_v3 union select udid from start_v3)")
+    //    707
+    // v4匹配
+    //    val sqlDF = spark.sql("select count(udid) from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and udid in (select udid from dev_v4 union select udid from start_v4)")
+    //    3606
+    //    val sqlDF = spark.sql("select count(distinct udid) from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and udid in (select udid from dev_v4 union select udid from start_v4)")
+    //    2622
+    //    val sqlDF = spark.sql("select distinct udid from (select udid from dev_v3 union select udid from start_v3 union select udid from dev_v4 union select udid from start_v4)")
+    //    sqlDF.repartition(1).write.parquet("/Users/zhaogj/bangcle/southbase/output/everisk/udid.parquet")
+    spark.read.parquet("/Users/zhaogj/bangcle/southbase/output/everisk/udid.parquet").createOrReplaceTempView("everisk_udid")
+    // v3+v4
+    //    val sqlDF = spark.sql("select distinct udid from dg where " +
+    //      "mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and " +
+    //      "udid in (select udid from everisk_udid)")
+    // 匹配上的udid集合
+    //    sqlDF.repartition(1).write.parquet("/Users/zhaogj/bangcle/southbase/output/join/udid.parquet")
+    spark.read.parquet("/Users/zhaogj/bangcle/southbase/output/join/udid.parquet").createOrReplaceTempView("join_udid")
+
+    // 匹配上的udid特征
+    //    val sqlDF = spark.sql("select * from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and udid in (select udid from join_udid)")
+    //    val sqlDF = spark.sql("select * from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and udid not in (select udid from join_udid)")
+    //    sqlDF.groupBy("ip").count().sort($"count".desc).show()
+
+    //    sqlDF.groupBy("sdk_ver").count().groupBy("count").count().sort($"count".desc).show()
+    //    val sqlDF = spark.sql("select mobile_no, count(distinct (udid)) as count from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and " +
+    //      "udid not in (select udid from join_udid) group by mobile_no order by count desc")
+    //    sqlDF.groupBy("count").count().sort($"count").show()
+    //    sqlDF.show()
+    // imei匹配情况分析
+    //    val sqlDF = spark.sql("select count(imei) from dg")
+    //    val sqlDF = spark.sql("select count(imei) from dg where imei in (select imei from dev_v4 union select imei from dev_v3)")
+    //    sqlDF.show()
+    //    val sqlDF = spark.sql("select * from dg where mobile_no = '68BAC75ED032E0A86BC3EAE1B5C996CF'")
+    //    sqlDF.groupBy("udid").count().sort($"count".desc).show(20, false)
+
+    //    val sqlDF = spark.sql("select distinct udid from (select udid from dev_v3 union select udid from start_v3) where udid in (select udid from dg where mobile_no = '68BAC75ED032E0A86BC3EAE1B5C996CF')")
+    //    sqlDF.show()
+    //    val sqlDF = spark.sql("select * from dg")
+    //    sqlDF.groupBy("mobile_no").count().sort($"count".desc).show(10, false)
+    //    val sqlDF = spark.sql("select count(distinct udid) from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and udid in (select udid from everisk_udid)")
+    //    sqlDF.show()
+    //    sqlDF.groupBy("udid").count().sort($"count".desc).show(20, false)
+    //    val sqlDF = spark.sql("select mobile_no, count(distinct udid) as count from dg where udid in (select udid from join_udid) and mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' " +
+    //      "group by mobile_no order by count desc")
+    //    sqlDF.groupBy("mobile_no").count().sort($"count".desc).show(20, false)
+    //    spark.sql("select mobile_no, count(distinct udid) as count from dg where udid not in (select udid from join_udid) and mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' " +
+    //      "group by mobile_no order by count desc").createOrReplaceTempView("mobile_no")
+    //    val sqlDF = spark.sql("select sum(fee) from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and mobile_no in (select mobile_no from mobile_no where count >= 2)")
+    //    sqlDF.show(20, false)
+
+    //    val sqlDF = spark.sql("select distinct imei from (select imei from dev_v3 union select imei from dev_v4)")
+    //    sqlDF.repartition(1).write.parquet("/Users/zhaogj/bangcle/southbase/output/everisk/imei.parquet")
+    spark.read.parquet("/Users/zhaogj/bangcle/southbase/output/everisk/imei.parquet").createOrReplaceTempView("everisk_imei")
+    //    val sqlDF = spark.sql("select distinct imei from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and imei in (select imei from everisk_imei)")
+    //    sqlDF.repartition(1).write.parquet("/Users/zhaogj/bangcle/southbase/output/join/imei.parquet")
+    spark.read.parquet("/Users/zhaogj/bangcle/southbase/output/join/imei.parquet").createOrReplaceTempView("join_imei")
+
+    //    val sqlDF = spark.sql("select mobile_no, count(distinct imei) as count from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' " +
+    //      "and imei in (select imei from join_imei) " +
+    //      "group by mobile_no order by count desc")
+    //    sqlDF.show()
+
+    spark.sql("select mobile_no, count(distinct imei) as count from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' " +
+      "and imei not in (select imei from join_imei) " +
+      "group by mobile_no order by count desc").createOrReplaceTempView("mobile_no")
+    val sqlDF = spark.sql("select sum(fee) from dg where  mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and mobile_no in (select mobile_no from mobile_no where count >=2)")
+    sqlDF.show()
+    //    val sqlDF = spark.sql("select * from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' " +
+    //      "and imei not in (select imei from join_imei)")
+    //    sqlDF.groupBy("imei").count().sort($"count".desc).show(20, false)
+    //    val sqlDF = spark.sql("select * from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF'")
+    //    sqlDF.groupBy("imei").count().sort($"count".desc).show(20, false)
     spark.stop()
   }
 
@@ -166,7 +260,8 @@ object SouthBase {
                   os: String, acc_net_type: String, ip: String, port_ver: String, sdk_ver: String,
                   mk_chan_id: String, fee_barck_id: String, res_time: String, return_code: String,
                   order_id: String, deal_dur: String, conn_net_type: String, prog_type: String,
-                  app_os_id: String, pid: String, miniversion: String, udid: String)
+                  app_os_id: String, pid: String, miniversion: String, udid: String, businesscode: String,
+                  vmmode: String, authtype: String, traceid: String, authseq: String, resourceid: String)
 
   def jq(spark: SparkSession): Unit = {
     val conf = new SparkConf().setAppName("Bangcle").setMaster("local[*]")
@@ -176,11 +271,12 @@ object SouthBase {
     val jqFile = spark.sparkContext.textFile("/Users/zhaogj/bangcle/southbase/jifei/jianquan/20190809_鉴权数据_全字段1")
     val jqDF = jqFile
       .map(_.split("\t"))
-      .filter(_.size == 31)
-      .map(x => JFJQ(x(0).trim, x(1).trim, x(2).trim, x(3).trim, x(4).trim, x(5).trim, x(6).trim,
+      .filter(_.size == 37)
+      .map(x => JFJQ(x(1).trim, x(1).trim, x(2).trim, x(3).trim, x(4).trim, x(5).trim, x(6).trim,
         x(7).trim, x(8).trim, x(9).trim, x(10).trim, x(11).trim, x(12).trim, x(13).trim, x(14).trim,
         x(15).trim, x(16).trim, x(17).trim, x(18).trim, x(19).trim, x(20).trim, x(21).trim, x(22).trim,
-        x(23).trim, x(24).trim, x(25).trim, x(26).trim, x(27).trim, x(28).trim, x(29).trim, x(30).trim))
+        x(23).trim, x(24).trim, x(25).trim, x(26).trim, x(27).trim, x(28).trim, x(29).trim, x(30).trim,
+        x(31).trim, x(32).trim, x(33).trim, x(34).trim, x(35).trim, x(36).trim))
       .toDF()
     jqDF.createOrReplaceTempView("jq")
   }
@@ -198,7 +294,7 @@ object SouthBase {
       .filter(_.size == 2)
       .map(x => Phone(x(0).trim, Integer.parseInt(x(1).trim)))
       .toDF()
-    jqDF.createOrReplaceTempView("jq")
+    //    jqDF.createOrReplaceTempView("jq")
   }
 
   case class JFDG(statis_data: String, req_time: String, session_id: String, mobile_no: String,
