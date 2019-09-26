@@ -241,16 +241,39 @@ object SouthBase {
     //      "group by mobile_no order by count desc")
     //    sqlDF.show()
 
-    spark.sql("select mobile_no, count(distinct imei) as count from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' " +
-      "and imei not in (select imei from join_imei) " +
-      "group by mobile_no order by count desc").createOrReplaceTempView("mobile_no")
-    val sqlDF = spark.sql("select sum(fee) from dg where  mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and mobile_no in (select mobile_no from mobile_no where count >=2)")
-    sqlDF.show()
+    //    spark.sql("select mobile_no, count(distinct imei) as count from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' " +
+    //      "and imei not in (select imei from join_imei) " +
+    //      "group by mobile_no order by count desc").createOrReplaceTempView("mobile_no")
+    //    val sqlDF = spark.sql("select sum(fee) from dg where  mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' and mobile_no in (select mobile_no from mobile_no where count >=2)")
+    //    sqlDF.show()
     //    val sqlDF = spark.sql("select * from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF' " +
     //      "and imei not in (select imei from join_imei)")
     //    sqlDF.groupBy("imei").count().sort($"count".desc).show(20, false)
     //    val sqlDF = spark.sql("select * from dg where mobile_no <> '68BAC75ED032E0A86BC3EAE1B5C996CF'")
     //    sqlDF.groupBy("imei").count().sort($"count".desc).show(20, false)
+
+    /**
+      * sdk版本分析
+      */
+    sdkVersionStart(spark)
+    sdkVersionCmcc(spark)
+    //    val sqlDF = spark.sql("select count(distinct udid) from cmcc")
+    //    sqlDF.groupBy("udid").count().sort($"count").show(100, false)
+    //    sqlDF.show(20, false)
+
+    // 埋点数据中设备个数:1606848
+    //    val sqlDF = spark.sql("select count(distinct udid) from start_0815")
+    //    sqlDF.show()
+    // 威胁感知中设备个数：658681
+    //    val sqlDF = spark.sql("select count(distinct udid) from start_0815 where udid in (select udid from cmcc)")
+    //    val sqlDF = spark.sql("select count(distinct udid) from cmcc where udid in (select udid from start_0815)")
+    //    sqlDF.show()
+    // 交集的设备个数：601138
+    //    val sqlDF = spark.sql("select a.udid, a.sdk_ver from cmcc as a, start_0815 as b where a.udid = b.udid")
+    //    sqlDF.groupBy("sdk_ver").count().sort($"count").show(100, false)
+    //    sqlDF.show()
+    val sqlDF = spark.sql("select sdk_ver, count(distinct udid) as count from cmcc where udid in (select udid from start_0815) group by sdk_ver order by count desc")
+    sqlDF.show()
     spark.stop()
   }
 
@@ -333,10 +356,7 @@ object SouthBase {
                    p_data_cd: String)
 
   private def start(spark: SparkSession): Unit = {
-    //    val conf = new SparkConf().setAppName("Bangcle").setMaster("local[*]")
-    //    val spark = SparkSession.builder().config(conf).getOrCreate()
     import spark.implicits._
-
     val file = spark.sparkContext.textFile("/Users/zhaogj/bangcle/southbase/jifei/start/20190809启动数据_全字段.txt")
     val df = file
       .map(_.split("\t"))
@@ -458,5 +478,48 @@ object SouthBase {
       })
       .toDF()
     startDF.createOrReplaceTempView("start_v4")
+  }
+
+  private def sdkVersionStart(spark: SparkSession): Unit = {
+    import spark.implicits._
+    val file = spark.sparkContext.textFile("/Users/zhaogj/bangcle/southbase/v4.3/sdk_ver/2019_0815_start.txt")
+    val df = file
+      .map(_.split("\t"))
+      .filter(_.size == 3)
+      .map(x => JSON.parseObject(x(2).trim))
+      .map(_.getJSONObject("body"))
+      .filter(_.containsKey("udid"))
+      .map(x => {
+        val start = x.getJSONObject("start")
+        EStartV4(x.getString("udid"), x.getString("market"), start.getString("pname"),
+          start.getString("app_name"), start.getString("app_version"))
+      })
+      .toDF()
+    df.createOrReplaceTempView("start_0815")
+  }
+
+  case class CMCC(udid: String, sdk_ver: String)
+
+  private def sdkVersionCmcc(spark: SparkSession): Unit = {
+    import spark.implicits._
+    val file = spark.sparkContext.textFile("/Users/zhaogj/bangcle/southbase/v4.3/sdk_ver/*cmccdata/*")
+    val df = file
+      .map(_.split(","))
+      .filter(_.size >= 24)
+      .map(x => {
+        if ("cmccdata2".equals(x(9)) || "cmccdata8".equals(x(9))) {
+          CMCC(x(4), x(23))
+        } else if ("cmccdata11".equals(x(9)) || "cmccdata21".equals(x(9)) || "cmccdata23".equals(x(9))) {
+          CMCC(x(4), x(21))
+        } else if ("cmccdata10".equals(x(9)) || "cmccdata22".equals(x(9))) {
+          CMCC(x(4), x(22))
+        } else if ("cmccdata3".equals(x(9)) || "cmccdata9".equals(x(9))) {
+          CMCC(x(4), x(24))
+        } else {
+          CMCC(x(4), "null")
+        }
+      })
+      .toDF()
+    df.createOrReplaceTempView("cmcc")
   }
 }
