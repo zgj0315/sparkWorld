@@ -272,8 +272,22 @@ object SouthBase {
     //    val sqlDF = spark.sql("select a.udid, a.sdk_ver from cmcc as a, start_0815 as b where a.udid = b.udid")
     //    sqlDF.groupBy("sdk_ver").count().sort($"count").show(100, false)
     //    sqlDF.show()
-    val sqlDF = spark.sql("select sdk_ver, count(distinct udid) as count from cmcc where udid in (select udid from start_0815) group by sdk_ver order by count desc")
-    sqlDF.show()
+    //    val sqlDF = spark.sql("select sdk_ver, count(distinct udid) as count from cmcc where udid in (select udid from start_0815) group by sdk_ver order by count desc")
+    //    sqlDF.show()
+    // 统计设备个数
+    //    val sqlDF = spark.sql("select * from dg")
+    //    val sqlDF = spark.sql("select * from dg where udid = '2902e59b-86d1-3889-92a8-89850c5e6756'")
+    //    sqlDF.groupBy("udid", "return_code").count().sort($"count".desc).show(100, false)
+    //    sqlDF.groupBy("udid", "imei").count().sort($"count".desc).show(100, false)
+    //        sqlDF.groupBy("udid").count().sort($"count".desc).show(100, false)
+    //    sqlDF.show(100)
+
+    //    val sqlDF = spark.sql("select * from dg where udid = '988eb3ad-1207-495d-97ed-b2b17860d322'")
+    //    sqlDF.groupBy("return_code").count().sort($"count".desc).show(100, false)
+
+    val sqlDF = spark.sql("select * from dg where return_code = 0")
+    sqlDF.groupBy("udid", "imei").count().sort($"count".desc).show(100, false)
+
     spark.stop()
   }
 
