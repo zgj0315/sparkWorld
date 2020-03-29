@@ -91,6 +91,40 @@ object PropertyGraphExample {
       "srcId:" + triplet.srcId + ", srcAttr:" + triplet.srcAttr + ", attr:" + triplet.attr + ", dstId:" + triplet.dstId + ", dstAttr:" + triplet.dstAttr
     ).collect.foreach(println(_))
 
+    //outerJoinVertices
+    //创建点RDD
+    val usersVertices: RDD[(VertexId, (String, String))] = sc.parallelize(Array(
+      (1L, ("Spark", "scala")), (2L, ("Hadoop", "java")),
+      (3L, ("Kafka", "scala")), (4L, ("Zookeeper", "Java "))))
+    //创建边RDD
+    val usersEdges: RDD[Edge[String]] = sc.parallelize(Array(
+      Edge(2L, 1L, "study"), Edge(3L, 2L, "train"),
+      Edge(1L, 2L, "exercise"), Edge(4L, 1L, "None")))
+
+    val salaryVertices: RDD[(VertexId, (String, Long))] = sc.parallelize(Array(
+      (1L, ("Spark", 30L)), (2L, ("Hadoop", 15L)),
+      (3L, ("Kafka", 10L)), (5L, ("parameter server", 40L))
+    ))
+    val salaryEdges: RDD[Edge[String]] = sc.parallelize(Array(
+      Edge(2L, 1L, "study"), Edge(3L, 2L, "train"),
+      Edge(1L, 2L, "exercise"), Edge(5L, 1L, "None")))
+
+    //构造Graph
+    val graphUser = Graph(usersVertices, usersEdges)
+    val graphSalary = Graph(salaryVertices, salaryEdges)
+    //outerJoinVertices操作,
+    val joinGraph = graphUser.outerJoinVertices(graphSalary.vertices) { (id, attr, deps) =>
+      deps match {
+        case Some(deps) => deps
+        case None => 0
+      }
+    }
+    //show graph
+    joinGraph.triplets.map(triplet =>
+      "srcId:" + triplet.srcId + ", srcAttr:" + triplet.srcAttr + ", attr:" + triplet.attr + ", dstId:" + triplet.dstId + ", dstAttr:" + triplet.dstAttr
+    ).collect.foreach(println(_))
+    joinGraph.vertices.collect.foreach(println)
+
     sc.stop()
   }
 }
