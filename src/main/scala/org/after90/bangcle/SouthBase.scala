@@ -286,7 +286,7 @@ object SouthBase {
     //    sqlDF.groupBy("return_code").count().sort($"count".desc).show(100, false)
 
     val sqlDF = spark.sql("select * from dg where return_code = 0")
-    sqlDF.groupBy("udid", "imei").count().sort($"count".desc).show(100, false)
+    sqlDF.groupBy($"udid", $"imei", $"mobile_no").count().sort($"count".desc).show(100, false)
 
     spark.stop()
   }
