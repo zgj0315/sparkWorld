@@ -125,6 +125,13 @@ object PropertyGraphExample {
     ).collect.foreach(println(_))
     joinGraph.vertices.collect.foreach(println)
 
+    val graphR = graph.reverse
+    //show graph
+    graphR.triplets.map(triplet =>
+      "srcId:" + triplet.srcId + ", srcAttr:" + triplet.srcAttr + ", attr:" + triplet.attr + ", dstId:" + triplet.dstId + ", dstAttr:" + triplet.dstAttr
+    ).collect.foreach(println(_))
+    joinGraph.vertices.collect.foreach(println)
+
     sc.stop()
   }
 }
