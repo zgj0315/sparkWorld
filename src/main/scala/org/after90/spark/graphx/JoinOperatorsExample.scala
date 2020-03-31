@@ -66,19 +66,25 @@ object JoinOperatorsExample {
     ).collect.foreach(println(_))
 
     // joinVertices
-    val graphJoin = graphA.joinVertices(graphB.vertices)((vid, old, outDeg) => (old._1 + "--" + outDeg._1, old._2 + "--" + outDeg._2))
-    println("graphJoin:")
-    graphJoin.triplets.map(triplet =>
+    // 在图A基础上，图A、B的节点交集，通过自定义函数更行
+    val joinGraph = graphA.joinVertices(graphB.vertices)((vid, old, outDeg) => (old._1 + "--" + outDeg._1, old._2 + "--" + outDeg._2))
+    println("joinGraph:")
+    joinGraph.triplets.map(triplet =>
       "triplet: srcId:" + triplet.srcId + ", srcAttr:" + triplet.srcAttr + ", attr:" + triplet.attr + ", dstId:" + triplet.dstId + ", dstAttr:" + triplet.dstAttr
     ).collect.foreach(println(_))
+
     // outerJoinVertices
+    // 在图A基础上，逐点更新
     val outerJoinGraph = graphA.outerJoinVertices(graphB.vertices) {
-      (vid, data, optDeg) => optDeg.getOrElse("Unknown")
+      //      (vid, data, optDeg) => optDeg.getOrElse("Unknown")
+      (vid, data, optDeg) => "e---" + optDeg.toString + data._1 + data._2
     }
     println("outerJoinGraph:")
     outerJoinGraph.triplets.map(triplet =>
       "triplet: srcId:" + triplet.srcId + ", srcAttr:" + triplet.srcAttr + ", attr:" + triplet.attr + ", dstId:" + triplet.dstId + ", dstAttr:" + triplet.dstAttr
     ).collect.foreach(println(_))
+
+
     sc.stop()
   }
 }
