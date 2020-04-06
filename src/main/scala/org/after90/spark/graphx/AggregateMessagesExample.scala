@@ -2,7 +2,7 @@ package org.after90.spark.graphx
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
-import org.apache.spark.graphx.{Edge, Graph, VertexId, VertexRDD}
+import org.apache.spark.graphx.{Edge, EdgeDirection, Graph, VertexId, VertexRDD}
 import org.apache.spark.graphx.util.GraphGenerators
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
@@ -98,6 +98,21 @@ object AggregateMessagesExample {
       (a, b) => (a._1 + "++" + b._1, a._2 + "++" + b._2) // Reduce Function
     )
     graphAgregateMessages.collect.foreach(println(_))
+
+
+    //    val graphNeighborIds = graphA.collectNeighborIds(EdgeDirection.In)
+    //    val graphNeighborIds = graphA.collectNeighborIds(EdgeDirection.Out)
+    val graphNeighborIds = graphA.collectNeighborIds(EdgeDirection.Either)
+
+    println("graphNeighborIds:")
+    graphNeighborIds.foreach(line => {
+      print(line._1 + ":");
+      for (elem <- line._2) {
+        print(elem + " ")
+      };
+      println;
+    })
+
 
     spark.stop()
   }
