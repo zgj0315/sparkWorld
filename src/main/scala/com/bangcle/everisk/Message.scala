@@ -31,7 +31,7 @@ object Message {
 
     import spark.implicits._
 
-    val msgFile = spark.sparkContext.textFile("/Users/zhaogj/tmp/*.gz")
+    val msgFile = spark.sparkContext.textFile("/Volumes/SanDisk500G/message/*/*.gz")
     val msgDF = msgFile
       .map(_.split("\t"))
       .filter(_.size == 3)
