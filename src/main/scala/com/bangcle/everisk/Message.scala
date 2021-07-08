@@ -31,7 +31,7 @@ object Message {
 
     import spark.implicits._
 
-    val msgFile = spark.sparkContext.textFile("/Volumes/SanDisk500G/message/*/*.gz")
+    val msgFile = spark.sparkContext.textFile("/home/zhaogj/message/*/*.gz")
     val msgDF = msgFile
       .map(_.split("\t"))
       .filter(_.size == 3)
@@ -87,7 +87,7 @@ object Message {
       .repartition(1)
       .write
       .option("delimiter", "\t")
-      .csv("/Users/zhaogj/tmp/apk")
+      .csv("/home/zhaogj/apk/result")
 
     //    var sqlDF = spark.sql("SELECT * FROM msg")
     //    sqlDF.show(1000)

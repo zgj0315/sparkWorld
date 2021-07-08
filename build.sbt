@@ -9,10 +9,10 @@ lazy val commonSettings = Seq(
 val spark_core = "org.apache.spark" %% "spark-core" % "3.1.1"
 val spark_sql = "org.apache.spark" %% "spark-sql" % "3.1.1"
 val spark_mllib = "org.apache.spark" %% "spark-mllib" % "3.1.1"
-val hadoop = "org.apache.hadoop" % "hadoop-client" % "3.2.1"
+val hadoop = "org.apache.hadoop" % "hadoop-client" % "3.2.2"
 val scalactic = "org.scalactic" %% "scalactic" % "3.2.9"
 val scalatest = "org.scalatest" % "scalatest_2.12" % "3.2.9" % "test"
-val fastjson = "com.alibaba" % "fastjson" % "1.2.73"
+val fastjson = "com.alibaba" % "fastjson" % "1.2.76"
 
 lazy val root = (project in file(".")).
   settings(commonSettings: _*).
